@@ -1,0 +1,130 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# API keys / credentials
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# ==============================
+# IDE / Editors
+# ==============================
+.vscode/
+.idea/
+*.code-workspace
+
+# ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+
+# ==============================
+# Testing / Coverage
+# ==============================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.pyre/
+.mypy_cache/
+.ruff_cache/
+
+# ==============================
+# Local Data
+# ==============================
+data/
+datasets/
+uploads/
+downloads/
+tmp/
+temp/
+
+# ==============================
+# Vector Stores / RAG Artifacts
+# ==============================
+vectorstore/
+vectorstores/
+faiss_index/
+*.faiss
+*.index
+
+# Qdrant local storage
+qdrant_storage/
+storage/
+
+# ==============================
+# Model / Embedding Artifacts
+# ==============================
+models/
+checkpoints/
+*.bin
+*.pt
+*.pth
+*.safetensors
+
+# ==============================
+# Streamlit
+# ==============================
+.streamlit/secrets.toml
+
+# ==============================
+# Docker
+# ==============================
+docker-compose.override.yml
+
+# ==============================
+# Node (if frontend/tooling is added)
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ==============================
+# Generated files
+# ==============================
+*.tmp
+*.bak
+*.swp
+*.swo

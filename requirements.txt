@@ -1,0 +1,41 @@
+# ── Core RAG & LLM ──────────────────────────────────────────
+langchain==0.3.25
+langchain-community==0.3.23
+langchain-huggingface==0.1.2
+langchain-ollama==0.3.2
+langgraph==0.4.1
+
+# ── Embeddings & Retrieval ───────────────────────────────────
+sentence-transformers==3.4.1        # BGE-M3 embeddings
+faiss-cpu==1.9.0
+rank_bm25==0.2.2                    # hybrid BM25 search
+
+# ── Reranking ────────────────────────────────────────────────
+# cross-encoder is part of sentence-transformers above
+
+# ── Document Loading ─────────────────────────────────────────
+pypdf==5.4.0
+unstructured==0.17.2
+
+# ── API Layer ────────────────────────────────────────────────
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.11.3
+
+# ── Evaluation ───────────────────────────────────────────────
+ragas==0.2.15
+datasets==3.5.0
+
+# ── Web Search Tool (agentic fallback) ───────────────────────
+tavily-python==0.5.1
+
+# ── Observability / MLOps ───────────────────────────────────
+loguru==0.7.3
+
+# ── UI ───────────────────────────────────────────────────────
+streamlit==1.44.1
+
+# ── Utilities ────────────────────────────────────────────────
+python-dotenv==1.1.0
+httpx==0.28.1
