@@ -8,6 +8,7 @@ langgraph==0.4.1
 # ── Embeddings & Retrieval ───────────────────────────────────
 sentence-transformers==3.4.1        # BGE-M3 embeddings
 faiss-cpu==1.9.0
+qdrant-client==1.14.2
 rank_bm25==0.2.2                    # hybrid BM25 search
 
 # ── Reranking ────────────────────────────────────────────────

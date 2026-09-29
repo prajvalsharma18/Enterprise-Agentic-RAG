@@ -53,13 +53,14 @@ def load_pdfs(data_dir: Path = DATA_DIR) -> Tuple[List[str], List[Dict[str, Any]
         for doc in documents:
             page_num = doc.metadata.get("page", 0)
             chunks   = splitter.split_text(doc.page_content)
-            for chunk in chunks:
+            for chunk_index, chunk in enumerate(chunks):
                 if len(chunk.strip()) < 30:   # skip very short fragments
                     continue
                 all_chunks.append(chunk)
                 all_metas.append({
                     "source": pdf_path.name,
                     "page":   page_num + 1,   # 1-indexed for display
+                    "chunk_index": chunk_index,
                 })
 
     logger.success(f"Loaded {len(all_chunks)} chunks from {len(pdf_files)} PDF(s)")

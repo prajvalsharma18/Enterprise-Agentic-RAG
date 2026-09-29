@@ -84,6 +84,11 @@ temp/
 # Vector Stores / RAG Artifacts
 # ==============================
 vectorstore/
+!vectorstore/
+vectorstore/*
+!vectorstore/qdrant_client.py
+!vectorstore/qdrant_store.py
+!vectorstore/store.py
 vectorstores/
 faiss_index/
 *.faiss

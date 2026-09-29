@@ -6,7 +6,7 @@ Corrective RAG Agent built with LangGraph 0.4+
 Graph nodes
 ───────────
   route_query      → decides: use documents OR answer from LLM knowledge
-  retrieve         → hybrid FAISS+BM25 search + cross-encoder rerank
+  retrieve         → hybrid vector+BM25 search + cross-encoder rerank
   grade_documents  → LLM judges if retrieved chunks are relevant
   rewrite_query    → rewrites query if grading failed (Corrective RAG loop)
   generate         → produces final answer with citations
@@ -34,9 +34,9 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from loguru import logger
 
-from vectorstore.store import hybrid_search
-
 load_dotenv()
+
+from vectorstore.store import hybrid_search
 
 # ── LLM (local Ollama — swap to any LangChain-compatible model) ───────────────
 LLM_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")   # change to mistral, qwen2.5, etc.
