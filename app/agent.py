@@ -24,6 +24,7 @@ State machine
 
 from __future__ import annotations
 import os
+from urllib.parse import urlsplit, urlunsplit
 from typing import Any, Dict, List, Annotated, Literal, Optional, TypedDict
 
 from dotenv import load_dotenv
@@ -57,13 +58,17 @@ class _AgentStateRequired(TypedDict):
     query:         str
     rewrite_count: int
     context:       List[Dict[str, Any]]   # retrieved chunk dicts from hybrid_search
-    web_results:   List[str]
+    web_results:   List[Dict[str, str]]
     answer:        str
 
 class AgentState(_AgentStateRequired, total=False):
     """LangGraph state — _route and _grade are injected by nodes, not part of initial state."""
     _route: str   # 'documents' | 'llm_only'
     _grade: str   # 'generate' | 'rewrite'
+    web_search_invoked: bool
+    diagnostics: Dict[str, Any]
+    generation_evidence_source: str
+    generation_context: List[str]
 
 
 # ── Node helpers ─────────────────────────────────────────────────────────────
@@ -84,9 +89,11 @@ def route_query(state: AgentState) -> AgentState:
     """
     query = _last_human_query(state)
     prompt = (
-        "You are a routing assistant. Given the user question below, decide:\n"
-        "- Reply 'documents' if the answer likely requires looking up specific documents.\n"
-        "- Reply 'llm_only' if it's general knowledge you can answer without documents.\n\n"
+        "You are a routing assistant for an application with a supplied document corpus. "
+        "Choose 'documents' for specific factual, technical, or business questions that "
+        "may be answered by the corpus, even if the user does not explicitly mention a "
+        "document. Choose 'llm_only' only for broad common knowledge or conversational "
+        "questions that do not need corpus evidence.\n\n"
         f"Question: {query}\n\nReply with exactly one word: documents OR llm_only"
     )
     response = llm.invoke([HumanMessage(content=prompt)])
@@ -94,15 +101,44 @@ def route_query(state: AgentState) -> AgentState:
     if "documents" not in decision:
         decision = "llm_only"
     logger.info(f"[route_query] decision='{decision}' for query='{query[:60]}'")
-    return {**state, "query": query, "_route": decision}
+    diagnostics = dict(state.get("diagnostics") or {})
+    diagnostics.update({"initial_route": decision, "initial_query": query})
+    diagnostics.setdefault("retrieval_attempts", [])
+    diagnostics.setdefault("rewritten_queries", [])
+    return {**state, "query": query, "_route": decision, "diagnostics": diagnostics}
 
 
 def retrieve(state: AgentState) -> AgentState:
     """Hybrid search → cross-encoder rerank → store chunks in state."""
     query   = state["query"]
-    results = hybrid_search(query, top_k=5)
+    retrieval_diagnostics: Dict[str, Any] = {}
+    results = hybrid_search(query, top_k=5, diagnostics=retrieval_diagnostics)
     logger.info(f"[retrieve] got {len(results)} chunks")
-    return {**state, "context": results}
+    diagnostics = dict(state.get("diagnostics") or {})
+    attempts = list(diagnostics.get("retrieval_attempts", []))
+    attempts.append({
+        "query": query,
+        "retrieval_candidates": retrieval_diagnostics.get("rrf_candidates", []),
+        "reranker_score_available": retrieval_diagnostics.get(
+            "reranker_score_available", False
+        ),
+        "reranked_candidates": [
+            {
+                "source": str(chunk.get("source", "unknown")),
+                "page": chunk.get("page"),
+                "chunk_id": chunk.get("chunk_id"),
+                "rrf_rank": chunk.get("rrf_rank"),
+                "rrf_score": chunk.get("rrf_score"),
+                "reranker_rank": chunk.get("reranker_rank", rank),
+                "reranker_score": chunk.get("reranker_score"),
+                "relevance_decision": "pending",
+                "text_preview": str(chunk.get("text", ""))[:300],
+            }
+            for rank, chunk in enumerate(results, start=1)
+        ],
+    })
+    diagnostics["retrieval_attempts"] = attempts
+    return {**state, "context": results, "diagnostics": diagnostics}
 
 
 def grade_documents(state: AgentState) -> AgentState:
@@ -114,22 +150,43 @@ def grade_documents(state: AgentState) -> AgentState:
     context = state["context"]
 
     relevant = []
-    for chunk in context:
+    diagnostics = dict(state.get("diagnostics") or {})
+    attempts = list(diagnostics.get("retrieval_attempts", []))
+    candidate_diagnostics = (
+        attempts[-1].get("reranked_candidates", []) if attempts else []
+    )
+    for chunk_index, chunk in enumerate(context):
         prompt = (
             f"Question: {query}\n\n"
             f"Document chunk:\n{chunk['text']}\n\n"
             "Is this chunk relevant to answering the question? Reply yes or no."
         )
         resp = llm.invoke([HumanMessage(content=prompt)])
-        if "yes" in extract_text_content(resp.content).lower():
+        accepted = "yes" in extract_text_content(resp.content).lower()
+        if chunk_index < len(candidate_diagnostics):
+            candidate_diagnostics[chunk_index]["relevance_decision"] = (
+                "accepted" if accepted else "rejected"
+            )
+        if accepted:
             relevant.append(chunk)
+
+    diagnostics["retrieval_attempts"] = attempts
+    diagnostics["final_document_context"] = [
+        {
+            "source": str(chunk.get("source", "unknown")),
+            "page": chunk.get("page"),
+            "chunk_id": chunk.get("chunk_id"),
+            "text_preview": str(chunk.get("text", ""))[:300],
+        }
+        for chunk in relevant
+    ]
 
     logger.info(f"[grade_documents] {len(relevant)}/{len(context)} chunks relevant")
 
     if relevant:
-        return {**state, "context": relevant, "_grade": "generate"}
+        return {**state, "context": relevant, "_grade": "generate", "diagnostics": diagnostics}
     else:
-        return {**state, "_grade": "rewrite"}
+        return {**state, "_grade": "rewrite", "diagnostics": diagnostics}
 
 
 def rewrite_query(state: AgentState) -> AgentState:
@@ -143,17 +200,74 @@ def rewrite_query(state: AgentState) -> AgentState:
     response      = llm.invoke([HumanMessage(content=prompt)])
     new_query     = extract_text_content(response.content).strip()
     rewrite_count = int(state.get("rewrite_count") or 0) + 1  # type: ignore[union-attr]
+    diagnostics = dict(state.get("diagnostics") or {})
+    rewritten_queries = list(diagnostics.get("rewritten_queries", []))
+    rewritten_queries.append(new_query)
+    diagnostics["rewritten_queries"] = rewritten_queries
     logger.info(f"[rewrite_query] attempt {rewrite_count}: '{new_query[:80]}'")
-    return {**state, "query": new_query, "rewrite_count": rewrite_count}
+    return {**state, "query": new_query, "rewrite_count": rewrite_count, "diagnostics": diagnostics}
 
 
 def web_search(state: AgentState) -> AgentState:
     """Tavily web search as last-resort fallback."""
-    query   = state["query"]
-    results = web_search_tool.invoke(query)
-    snippets = [r["content"] for r in results if "content" in r]
-    logger.info(f"[web_search] got {len(snippets)} web results")
-    return {**state, "web_results": snippets}
+    query = state["query"]
+    search_error = None
+    try:
+        results = web_search_tool.invoke(query) or []
+    except Exception as exc:
+        logger.warning(f"[web_search] Tavily fallback failed: {type(exc).__name__}")
+        results = []
+        search_error = type(exc).__name__
+    safe_results = []
+    for result in results:
+        if not isinstance(result, dict):
+            continue
+        try:
+            parsed = urlsplit(str(result.get("url", "")))
+            host = parsed.hostname or ""
+            if parsed.port:
+                host = f"{host}:{parsed.port}"
+            safe_url = urlunsplit((parsed.scheme, host, parsed.path, "", ""))
+        except ValueError:
+            safe_url = ""
+        safe_results.append({
+            "title": str(result.get("title", ""))[:200],
+            "url": safe_url[:500],
+            "snippet": str(result.get("content", ""))[:500],
+        })
+    logger.info(f"[web_search] got {len(safe_results)} web results")
+    diagnostics = dict(state.get("diagnostics") or {})
+    diagnostics["web_fallback_invoked"] = True
+    diagnostics["web_results"] = safe_results
+    if search_error:
+        diagnostics["web_fallback_error"] = search_error
+    return {**state, "web_results": safe_results, "web_search_invoked": True, "diagnostics": diagnostics}
+
+
+def _select_generation_evidence(state: AgentState):
+    """Select one source; an invoked fallback supersedes stale document context."""
+    if state.get("web_search_invoked"):
+        results = state.get("web_results") or []
+        if not results:
+            return "insufficient_evidence", "", []
+        block = "\n\n".join(
+            f"[Title: {item['title']} | URL: {item['url']}]\n{item['snippet']}"
+            for item in results
+        )
+        generation_context = [
+            f"[Title: {item['title']} | URL: {item['url']}]\n{item['snippet']}"
+            for item in results
+        ]
+        return "web", block, generation_context
+
+    context = state.get("context") or []
+    if context:
+        block = "\n\n".join(
+            f"[Source: {item['source']}, Page {item['page']}]\n{item['text']}"
+            for item in context
+        )
+        return "documents", block, [item["text"] for item in context]
+    return "llm_only", "", []
 
 
 def generate(state: AgentState) -> AgentState:
@@ -162,22 +276,23 @@ def generate(state: AgentState) -> AgentState:
     Adds citations (source + page) when using document context.
     """
     query:       str                    = state["query"]
-    context:     List[Dict[str, Any]]  = state.get("context") or []       # type: ignore[assignment]
-    web_results: List[str]             = state.get("web_results") or []    # type: ignore[assignment]
     history:     List[BaseMessage]     = state.get("messages") or []       # type: ignore[assignment]
 
-    # Build context block
-    if context:
-        ctx_block = "\n\n".join(
-            f"[Source: {c['source']}, Page {c['page']}]\n{c['text']}"
-            for c in context
-        )
+    evidence_source, ctx_block, generation_context = _select_generation_evidence(state)
+    if evidence_source == "documents":
         source_note = "Cite sources as [Source, Page X] in your answer."
-    elif web_results:
-        ctx_block   = "\n\n".join(web_results)
-        source_note = "These results are from the web."
+    elif evidence_source == "web":
+        source_note = "These results are from the web. Cite their URLs when relevant."
+    elif evidence_source == "insufficient_evidence":
+        answer = "I could not find sufficient document or web evidence to answer this question."
+        diagnostics = dict(state.get("diagnostics") or {})
+        diagnostics.update({"final_evidence_source": evidence_source, "generation_context": []})
+        return {
+            **state, "answer": answer, "generation_evidence_source": evidence_source,
+            "generation_context": [], "diagnostics": diagnostics,
+            "messages": state["messages"] + [AIMessage(content=answer)],
+        }
     else:
-        ctx_block   = ""
         source_note = "Answer from your general knowledge."
 
     # Conversation history (last 6 turns for context window efficiency)
@@ -202,9 +317,17 @@ def generate(state: AgentState) -> AgentState:
     ])
     answer = extract_text_content(response.content)
     logger.info(f"[generate] answer length={len(answer)} chars")
+    diagnostics = dict(state.get("diagnostics") or {})
+    diagnostics.update({
+        "final_evidence_source": evidence_source,
+        "generation_context": generation_context,
+    })
     return {
         **state,
         "answer":   answer,
+        "generation_evidence_source": evidence_source,
+        "generation_context": generation_context,
+        "diagnostics": diagnostics,
         "messages": state["messages"] + [AIMessage(content=answer)],
     }
 
@@ -279,4 +402,11 @@ def ask(query: str, history: Optional[List[BaseMessage]] = None) -> Dict[str, An
         "sources":       final_state.get("context", []),
         "rewrite_count": final_state.get("rewrite_count", 0),
         "used_web":      bool(final_state.get("web_results")),
+        "diagnostics":   final_state.get("diagnostics", {}),
+        "evidence_source": final_state.get("generation_evidence_source", "unknown"),
+        "generation_context": final_state.get("generation_context", []),
+        "route": (
+            "web" if final_state.get("web_search_invoked")
+            else final_state.get("_route", "unknown")
+        ),
     }

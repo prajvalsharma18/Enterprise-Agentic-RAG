@@ -78,8 +78,9 @@ class HybridBackendTests(unittest.TestCase):
             ],
         ).start()
         self.addCleanup(patch.stopall)
+        diagnostics = {}
         with patch.dict(os.environ, {"VECTOR_STORE": "qdrant"}):
-            results = store.hybrid_search("question")
+            results = store.hybrid_search("question", diagnostics=diagnostics)
 
         self.embed.assert_called_once_with("question")
         qdrant_search.assert_called_once()
@@ -92,6 +93,9 @@ class HybridBackendTests(unittest.TestCase):
         self.assertIn("alpha chunk", candidate_texts)
         self.load.assert_called_once_with(include_faiss=False)
         self.assertTrue(results)
+        self.assertTrue(diagnostics["rrf_candidates"])
+        self.assertFalse(diagnostics["reranker_score_available"])
+        self.assertEqual(results[0]["reranker_rank"], 1)
 
     def test_explicit_faiss_backend_uses_faiss_dense_search(self):
         self.index.search.return_value = (

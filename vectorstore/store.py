@@ -13,7 +13,7 @@ import json
 import os
 import pickle
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 import faiss
 import numpy as np
@@ -100,7 +100,11 @@ def _load_index(include_faiss: bool = True):
 
 # ── Hybrid search ────────────────────────────────────────────────────────────
 
-def hybrid_search(query: str, top_k: int = TOP_K_FINAL) -> List[Dict[str, Any]]:
+def hybrid_search(
+    query: str,
+    top_k: int = TOP_K_FINAL,
+    diagnostics: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     1. Dense FAISS search     → ranked list A
     2. Sparse BM25 search     → ranked list B
@@ -157,19 +161,39 @@ def hybrid_search(query: str, top_k: int = TOP_K_FINAL) -> List[Dict[str, Any]]:
     # ── Collect candidate chunks ─────────────────────────────
     candidate_chunks = [chunks[i]     for i in fused_ids]
     candidate_metas  = [metadatas[i]  for i in fused_ids]
+    if diagnostics is not None:
+        diagnostics["rrf_candidates"] = [
+            {
+                "chunk_id": corpus_index,
+                "source": str(metadatas[corpus_index].get("source", "unknown")),
+                "page": metadatas[corpus_index].get("page"),
+                "rrf_rank": rank,
+                "rrf_score": float(rrf[corpus_index]),
+                "text_preview": str(chunks[corpus_index])[:300],
+            }
+            for rank, corpus_index in enumerate(fused_ids, start=1)
+        ]
 
     # ── Cross-encoder rerank ─────────────────────────────────
     reranked_texts = rerank(query, candidate_chunks, top_n=top_k)
 
     results = []
-    for text in reranked_texts:
+    for reranker_rank, text in enumerate(reranked_texts, start=1):
         idx  = candidate_chunks.index(text)
+        corpus_index = fused_ids[idx]
         meta = candidate_metas[idx]
         results.append({
             "text":   text,
             "source": meta.get("source", "unknown"),
             "page":   meta.get("page", 0),
+            "chunk_id": corpus_index,
+            "rrf_rank": idx + 1,
+            "reranker_rank": reranker_rank,
+            "rrf_score": float(rrf[corpus_index]),
         })
+
+    if diagnostics is not None:
+        diagnostics["reranker_score_available"] = False
 
     logger.debug(f"Hybrid search returned {len(results)} chunks for: '{query[:60]}'")
     return results
