@@ -82,7 +82,9 @@ class HybridBackendTests(unittest.TestCase):
             results = store.hybrid_search("question")
 
         self.embed.assert_called_once_with("question")
-        qdrant_search.assert_called_once_with([0.1, 0.2], store.TOP_K_FETCH)
+        qdrant_search.assert_called_once()
+        np.testing.assert_allclose(qdrant_search.call_args.args[0], [0.1, 0.2])
+        self.assertEqual(qdrant_search.call_args.args[1], store.TOP_K_FETCH)
         self.index.search.assert_not_called()
         self.bm25.get_scores.assert_called_once_with(["question"])
         candidate_texts = self.rerank.call_args.args[1]
@@ -119,7 +121,8 @@ class HybridBackendTests(unittest.TestCase):
 
 class CorrectiveRetrievalTests(unittest.TestCase):
     def test_rewritten_query_uses_selected_qdrant_backend(self):
-        from app import agent
+        with patch.dict(os.environ, {"LLM_PROVIDER": "ollama"}):
+            from app import agent
 
         chunks = ["rewritten-query result"]
         metadatas = [{"source": "doc.pdf", "page": 1, "chunk_index": 0}]
@@ -138,7 +141,9 @@ class CorrectiveRetrievalTests(unittest.TestCase):
             state = {"query": "rewritten query", "context": []}
             result = agent.retrieve(state)
 
-        qdrant_search.assert_called_once_with([0.4, 0.5], store.TOP_K_FETCH)
+        qdrant_search.assert_called_once()
+        np.testing.assert_allclose(qdrant_search.call_args.args[0], [0.4, 0.5])
+        self.assertEqual(qdrant_search.call_args.args[1], store.TOP_K_FETCH)
         self.assertEqual(result["context"][0]["text"], chunks[0])
 
 

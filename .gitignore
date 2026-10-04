@@ -129,6 +129,7 @@ pnpm-debug.log*
 # ==============================
 # Generated files
 # ==============================
+evaluation/pdf_corpus_extract.txt
 *.tmp
 *.bak
 *.swp

@@ -1,0 +1,1163 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R 12 0 R 14 0 R 16 0 R 18 0 R 20 0 R 22 0 R 24 0 R 26 0 R 28 0 R 30 0 R 32 0 R] /Count 15 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1469 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 1 of 15) Tj
+T*
+() Tj
+T*
+(ID: enc-01) Tj
+T*
+(Question: Which technologies does the Google Cloud encryption document name for) Tj
+T*
+(protecting data in transit?) Tj
+T*
+(Ground Truth: It names Transport Layer Security \(TLS\), BoringSSL, Application Layer) Tj
+T*
+(Transport Security \(ALTS\), and the PSP security protocol. It also lists IPsec, managed) Tj
+T*
+(TLS certificates, and Cloud Service Mesh as additional protection options.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 1) Tj
+T*
+(Source Section: Introduction) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: enc-02) Tj
+T*
+(Question: How does encryption in transit protect a communication if it is intercepted?) Tj
+T*
+(Ground Truth: The document says the endpoints are authenticated and the data is) Tj
+T*
+(encrypted before transmission. On arrival, the receiver decrypts the data and verifies) Tj
+T*
+(that it was not modified during transit.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 1) Tj
+T*
+(Source Section: Authentication, integrity, and encryption) Tj
+T*
+(Category: semantic_retrieval) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1345 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 2 of 15) Tj
+T*
+() Tj
+T*
+(ID: enc-03) Tj
+T*
+(Question: What functions does Google Front End \(GFE\) perform for incoming connections?) Tj
+T*
+(Ground Truth: GFE terminates incoming HTTP\(S\), TCP, and TLS connections, provides DDoS) Tj
+T*
+(countermeasures, and routes and load-balances traffic to Google Cloud services.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 3) Tj
+T*
+(Source Section: End user to a Google Cloud service) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: enc-04) Tj
+T*
+(Question: Which TLS implementation does GFE use, and what FIPS validation does the) Tj
+T*
+(document report for BoringCrypto?) Tj
+T*
+(Ground Truth: GFE implements TLS with Google's open-source BoringSSL. The document) Tj
+T*
+(states that BoringCrypto, BoringSSL's core, is validated to FIPS 140-3 Level 1.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 3) Tj
+T*
+(Source Section: End user to a Google Cloud service) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 1693 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 3 of 15) Tj
+T*
+() Tj
+T*
+(ID: enc-05) Tj
+T*
+(Question: When does the document say a Layer 7 load balancer encrypts the user) Tj
+T*
+(connection by default, and how is TLS terminated?) Tj
+T*
+(Ground Truth: When the end user's client supports TLS, the connection to an external) Tj
+T*
+(Layer 7 load balancer is encrypted with TLS by default. GFE terminates the user's TLS) Tj
+T*
+(connection using a self-managed or Google-managed certificate.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 4) Tj
+T*
+(Source Section: End user to a customer application hosted on Google Cloud) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: enc-06) Tj
+T*
+(Question: How are private-IP VM connections within a VPC protected, and what caveat) Tj
+T*
+(applies to VM connections using external IP addresses?) Tj
+T*
+(Ground Truth: Private-IP traffic within the same VPC or across peered VPC networks is) Tj
+T*
+(encrypted at the network layer. Communicating hosts establish a session key over an) Tj
+T*
+(ALTS-protected control channel, and the keys are periodically rotated. Connections using) Tj
+T*
+(external IP addresses are not automatically encrypted.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 5) Tj
+T*
+(Source Section: Google Cloud virtual network authentication and encryption) Tj
+T*
+(Category: multi_hop) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 1611 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 4 of 15) Tj
+T*
+() Tj
+T*
+(ID: enc-07) Tj
+T*
+(Question: What does PSP provide when SmartNIC hardware is available, and which non-TCP) Tj
+T*
+(example and key property are specified?) Tj
+T*
+(Ground Truth: When SmartNICs are available, ALTS uses PSP to encrypt data in transit) Tj
+T*
+(across Google's network and can offload encryption to SmartNIC hardware. PSP supports) Tj
+T*
+(non-TCP protocols such as UDP and uses a unique encryption key for each connection.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 7) Tj
+T*
+(Source Section: Network encryption using PSP) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: enc-08) Tj
+T*
+(Question: Which key-exchange and encryption details does the document specify for ALTS?) Tj
+T*
+(Ground Truth: The ALTS handshake combines elliptic-curve and quantum-safe key exchange,) Tj
+T*
+(and supported shared-key derivation algorithms include ML-KEM \(FIPS 203\). The record) Tj
+T*
+(protocol uses the shared traffic key; ALTS defaults to AES-128-GCM, while data in) Tj
+T*
+(Google's lowest-level storage system uses AES-256.) Tj
+T*
+(Source Document: encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 8) Tj
+T*
+(Source Section: Application layer transport security) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 13 0 R >>
+endobj
+13 0 obj
+<< /Length 1393 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 5 of 15) Tj
+T*
+() Tj
+T*
+(ID: sec-01) Tj
+T*
+(Question: What responsibilities does Google's dedicated security team have, according to) Tj
+T*
+(the overview?) Tj
+T*
+(Ground Truth: The team maintains defense systems, develops security review processes,) Tj
+T*
+(builds security infrastructure, implements security policies, scans for vulnerabilities,) Tj
+T*
+(and conducts penetration tests, quality assurance, and security reviews.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 4) Tj
+T*
+(Source Section: Our dedicated security team) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: sec-02) Tj
+T*
+(Question: What amount did Google's Vulnerability Reward Program award researchers in) Tj
+T*
+(2023?) Tj
+T*
+(Ground Truth: Google says it awarded researchers over $10 million in prize money in 2023) Tj
+T*
+(through the Vulnerability Reward Program.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 5) Tj
+T*
+(Source Section: Collaboration with the security research community) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 15 0 R >>
+endobj
+15 0 obj
+<< /Length 1563 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 6 of 15) Tj
+T*
+() Tj
+T*
+(ID: sec-03) Tj
+T*
+(Question: How does Google's vulnerability management process check whether vulnerability) Tj
+T*
+(fixes have actually reached systems?) Tj
+T*
+(Ground Truth: Automation pipelines continually reassess patch deployment to mitigate) Tj
+T*
+(vulnerabilities and flag deployments that are incorrect or partial.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 7) Tj
+T*
+(Source Section: Vulnerability management) Tj
+T*
+(Category: semantic_retrieval) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: sec-04) Tj
+T*
+(Question: Which information sources are brought together for Google's unified security) Tj
+T*
+(monitoring, and what examples of suspicious activity are checked?) Tj
+T*
+(Ground Truth: The program aggregates security telemetry in one location, including) Tj
+T*
+(internal network traffic, employee actions on systems, and outside vulnerability) Tj
+T*
+(information. It inspects network traffic for signs such as botnet connections and) Tj
+T*
+(examines system logs for unusual behavior such as attempts to access customer data.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 8) Tj
+T*
+(Source Section: Security monitoring) Tj
+T*
+(Category: multi_hop) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 17 0 R >>
+endobj
+17 0 obj
+<< /Length 1373 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 7 of 15) Tj
+T*
+() Tj
+T*
+(ID: sec-05) Tj
+T*
+(Question: What incident-response guidance does Google's security incident program align) Tj
+T*
+(with, and when is the security team available to employees?) Tj
+T*
+(Ground Truth: The incident-management program aligns with NIST SP 800-61 guidance. The) Tj
+T*
+(Google security team is available to employees 24/7 to help resolve incidents.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 8) Tj
+T*
+(Source Section: Incident management) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: sec-06) Tj
+T*
+(Question: What controls restrict access to the data-center floor?) Tj
+T*
+(Ground Truth: Access to the data-center floor is through a security corridor with multi-) Tj
+T*
+(factor access control using security badges and biometrics; only approved employees with) Tj
+T*
+(specific roles may enter.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 9) Tj
+T*
+(Source Section: State-of-the-art data centers) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+18 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 19 0 R >>
+endobj
+19 0 obj
+<< /Length 1469 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 8 of 15) Tj
+T*
+() Tj
+T*
+(ID: sec-07) Tj
+T*
+(Question: At which layers does Google Cloud apply its default encryption for data at) Tj
+T*
+(rest?) Tj
+T*
+(Ground Truth: The overview says Google Cloud applies several layers of encryption by) Tj
+T*
+(default to stored user data. Encryption is applied at the application layer, the) Tj
+T*
+(storage-device layer, or both.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 11) Tj
+T*
+(Source Section: Securing data at rest) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: sec-08) Tj
+T*
+(Question: How does Confidential Computing protect data while it is being processed, and) Tj
+T*
+(what does its attestation establish?) Tj
+T*
+(Ground Truth: Confidential Computing uses hardware isolation and a Trusted Execution) Tj
+T*
+(Environment \(TEE\) to perform computation in cryptographic isolation. The TEE provides) Tj
+T*
+(independently verifiable attestations of the system state and the code that ran.) Tj
+T*
+(Source Document: google_cloud_security.pdf) Tj
+T*
+(Source Pages: 12) Tj
+T*
+(Source Section: Securing data in use) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+20 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 21 0 R >>
+endobj
+21 0 obj
+<< /Length 1473 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 9 of 15) Tj
+T*
+() Tj
+T*
+(ID: ms-01) Tj
+T*
+(Question: What three core business priorities does Microsoft name in the annual report) Tj
+T*
+(letter?) Tj
+T*
+(Ground Truth: Microsoft names security, quality, and AI innovation as its three core) Tj
+T*
+(business priorities.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 1) Tj
+T*
+(Source Section: Our Priorities) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: ms-02) Tj
+T*
+(Question: How many full-time-equivalent engineers did Microsoft dedicate through SFI to) Tj
+T*
+(its highest-priority security work?) Tj
+T*
+(Ground Truth: Microsoft says it dedicated the equivalent of 34,000 full-time engineers) Tj
+T*
+(to its highest-priority security work through the Secure Future Initiative \(SFI\). The) Tj
+T*
+(work included strengthening identity protection, securing networks and systems,) Tj
+T*
+(improving threat detection and response, and embedding secure-by-design practices.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 1) Tj
+T*
+(Source Section: Our Priorities ó Security) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+22 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 23 0 R >>
+endobj
+23 0 obj
+<< /Length 1431 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 10 of 15) Tj
+T*
+() Tj
+T*
+(ID: ms-03) Tj
+T*
+(Question: How many datacenters and regions did Microsoft report operating, and how much) Tj
+T*
+(new capacity did it add that year?) Tj
+T*
+(Ground Truth: Microsoft reported operating more than 400 datacenters in 70 regions and) Tj
+T*
+(adding over two gigawatts of new capacity during the year.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 2) Tj
+T*
+(Source Section: Our Cloud and AI infrastructure) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: ms-04) Tj
+T*
+(Question: What makes OneLake a foundation for enterprise AI applications in Microsoft's) Tj
+T*
+(description?) Tj
+T*
+(Ground Truth: The report says OneLake spans databases and clouds, including Power BI) Tj
+T*
+(semantic models, and describes this as a foundation for building enterprise AI) Tj
+T*
+(applications. It also says Microsoft Fabric had 25,000 paid customers.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 2) Tj
+T*
+(Source Section: Our Cloud and AI infrastructure) Tj
+T*
+(Category: semantic_retrieval) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+24 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 25 0 R >>
+endobj
+25 0 obj
+<< /Length 1432 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 11 of 15) Tj
+T*
+() Tj
+T*
+(ID: ms-05) Tj
+T*
+(Question: What did Azure AI Foundry provide at introduction, and what adoption figure) Tj
+T*
+(did Microsoft report for Fortune 500 companies?) Tj
+T*
+(Ground Truth: Azure AI Foundry was described as a platform to design, customize, and run) Tj
+T*
+(AI applications and agents, with access to more than 11,000 partner models. Microsoft) Tj
+T*
+(said 80 percent of the Fortune 500 used Foundry for AI workloads.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 2) Tj
+T*
+(Source Section: Our Cloud and AI infrastructure) Tj
+T*
+(Category: terminology_hybrid) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: ms-06) Tj
+T*
+(Question: How many monthly active users did Microsoft report across its commercial and) Tj
+T*
+(consumer Copilot products?) Tj
+T*
+(Ground Truth: Microsoft reported more than 100 million monthly active users across its) Tj
+T*
+(commercial and consumer Copilot products.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 2) Tj
+T*
+(Source Section: Copilots and agents) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+26 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 27 0 R >>
+endobj
+27 0 obj
+<< /Length 1592 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 12 of 15) Tj
+T*
+() Tj
+T*
+(ID: ms-07) Tj
+T*
+(Question: What adoption figures does the report give for Copilot Studio and GitHub) Tj
+T*
+(Copilot?) Tj
+T*
+(Ground Truth: More than 230,000 organizations used Copilot Studio to extend Microsoft) Tj
+T*
+(365 Copilot or build agents, and GitHub Copilot had more than 20 million users.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 3) Tj
+T*
+(Source Section: Copilots and agents) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: easy) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: ms-08) Tj
+T*
+(Question: How does Microsoft 365 Commercial combine products for organizations, and what) Tj
+T*
+(factors does the report say drive its revenue growth?) Tj
+T*
+(Ground Truth: Microsoft 365 Commercial brings together Office, Windows, Microsoft 365) Tj
+T*
+(Copilot, and Enterprise Mobility + Security. Growth depends on reaching new users,) Tj
+T*
+(adding AI-enabled tools and agentic scenarios, expanding the installed base and average) Tj
+T*
+(revenue per user, and the continued shift from on-premises Office licenses to Microsoft) Tj
+T*
+(365.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 12) Tj
+T*
+(Source Section: Microsoft 365 Commercial Products and Cloud Services) Tj
+T*
+(Category: multi_hop) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+28 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 29 0 R >>
+endobj
+29 0 obj
+<< /Length 1839 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 13 of 15) Tj
+T*
+() Tj
+T*
+(ID: ms-09) Tj
+T*
+(Question: What were Microsoft's fiscal 2025 revenue and operating income, and how did) Tj
+T*
+(each change from fiscal 2024?) Tj
+T*
+(Ground Truth: Microsoft reported fiscal 2025 revenue of $281.724 billion, up 15 percent) Tj
+T*
+(from $245.122 billion in fiscal 2024. Operating income was $128.528 billion, up 17) Tj
+T*
+(percent from $109.433 billion.) Tj
+T*
+(Source Document: microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 23) Tj
+T*
+(Source Section: Summary Results of Operations) Tj
+T*
+(Category: exact_fact) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: cross-01) Tj
+T*
+(Question: How does the Google Cloud Security Overview's description of user-to-GFE) Tj
+T*
+(protection compare with the more detailed Encryption in Transit document's account of) Tj
+T*
+(traffic to and from services?) Tj
+T*
+(Ground Truth: The overview says traffic between user devices and Google Front End \(GFE\)) Tj
+T*
+(is encrypted with strong protocols such as TLS. The detailed document says user traffic) Tj
+T*
+(to GFE is encrypted with TLS or QUIC, while ALTS provides authenticated, integrity-) Tj
+T*
+(protected encryption between GFE and Google Cloud services and between services.) Tj
+T*
+(Source Document: google_cloud_security.pdf; encryption_google_cloud.pdf) Tj
+T*
+(Source Pages: 11, 6) Tj
+T*
+(Source Section: Securing data in transit; Connectivity to Google APIs and services;) Tj
+T*
+(Service-to-service authentication, integrity, and encryption) Tj
+T*
+(Category: cross_document) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+30 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 31 0 R >>
+endobj
+31 0 obj
+<< /Length 1672 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 14 of 15) Tj
+T*
+() Tj
+T*
+(ID: cross-02) Tj
+T*
+(Question: How does Google's shared-responsibility description differ in focus from) Tj
+T*
+(Microsoft's Secure Future Initiative work described in its annual report?) Tj
+T*
+(Ground Truth: Google's overview assigns customers responsibility for securing what they) Tj
+T*
+(bring to the cloud, including their data, while Google secures the underlying cloud) Tj
+T*
+(infrastructure; it also distinguishes IaaS and SaaS responsibilities. Microsoft's report) Tj
+T*
+(describes internal SFI work, including a 34,000-engineer equivalent focused on identity) Tj
+T*
+(protection, networks and systems, threat detection and response, and secure-by-design) Tj
+T*
+(practices.) Tj
+T*
+(Source Document: google_cloud_security.pdf; microsoft_annual_report_2025.pdf) Tj
+T*
+(Source Pages: 17, 1) Tj
+T*
+(Source Section: Google Cloud security products and services; Our Priorities ó Security) Tj
+T*
+(Category: cross_document) Tj
+T*
+(Difficulty: hard) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: neg-01) Tj
+T*
+(Question: What total revenue did Google report for fiscal year 2025?) Tj
+T*
+(Ground Truth: The supplied documents do not state Google's fiscal year 2025 total) Tj
+T*
+(revenue.) Tj
+T*
+(Source Document: All supplied PDFs) Tj
+T*
+(Source Pages: Not stated) Tj
+T*
+(Source Section: Not stated in the supplied corpus) Tj
+T*
+(Category: unsupported) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+32 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 33 0 R >>
+endobj
+33 0 obj
+<< /Length 1133 >>
+stream
+BT
+/F1 10 Tf
+46 792 Td
+14 TL
+(RAG Evaluation Ground Truth) Tj
+T*
+(Corpus-grounded benchmark | page 15 of 15) Tj
+T*
+() Tj
+T*
+(ID: neg-02) Tj
+T*
+(Question: How many Google Cloud datacenters does Google operate worldwide?) Tj
+T*
+(Ground Truth: The supplied documents do not give a worldwide count of Google Cloud) Tj
+T*
+(datacenters.) Tj
+T*
+(Source Document: All supplied PDFs) Tj
+T*
+(Source Pages: Not stated) Tj
+T*
+(Source Section: Not stated in the supplied corpus) Tj
+T*
+(Category: unsupported) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+(ID: neg-03) Tj
+T*
+(Question: What was Microsoft's exact Azure revenue in fiscal year 2024?) Tj
+T*
+(Ground Truth: The supplied documents do not state an exact fiscal year 2024 Azure) Tj
+T*
+(revenue amount.) Tj
+T*
+(Source Document: All supplied PDFs) Tj
+T*
+(Source Pages: Not stated) Tj
+T*
+(Source Section: Not stated in the supplied corpus) Tj
+T*
+(Category: unsupported) Tj
+T*
+(Difficulty: medium) Tj
+T*
+() Tj
+T*
+(------------------------------------------------------------------------) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+xref
+0 34
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000218 00000 n 
+0000000315 00000 n 
+0000000441 00000 n 
+0000001962 00000 n 
+0000002088 00000 n 
+0000003485 00000 n 
+0000003611 00000 n 
+0000005356 00000 n 
+0000005484 00000 n 
+0000007148 00000 n 
+0000007276 00000 n 
+0000008722 00000 n 
+0000008850 00000 n 
+0000010466 00000 n 
+0000010594 00000 n 
+0000012020 00000 n 
+0000012148 00000 n 
+0000013670 00000 n 
+0000013798 00000 n 
+0000015324 00000 n 
+0000015452 00000 n 
+0000016936 00000 n 
+0000017064 00000 n 
+0000018549 00000 n 
+0000018677 00000 n 
+0000020322 00000 n 
+0000020450 00000 n 
+0000022342 00000 n 
+0000022470 00000 n 
+0000024195 00000 n 
+0000024323 00000 n 
+trailer
+<< /Size 34 /Root 1 0 R >>
+startxref
+25509
+%%EOF

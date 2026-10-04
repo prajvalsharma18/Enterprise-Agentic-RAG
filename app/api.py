@@ -28,6 +28,7 @@ from pydantic import BaseModel
 from app.agent import ask
 from ingestion.ingest import load_pdfs
 from vectorstore.store import build_index
+from vectorstore.qdrant_store import check_qdrant_connection
 
 
 # ── App setup ────────────────────────────────────────────────────────────────
@@ -81,6 +82,15 @@ class QueryResponse(BaseModel):
 def health():
     """Liveness probe — required for Docker/cloud deploy."""
     return {"status": "ok", "version": app.version}
+
+
+@app.get("/health/qdrant")
+def qdrant_health():
+    """Read-only Qdrant connection, collection, and vector compatibility check."""
+    try:
+        return check_qdrant_connection()
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post("/ingest")

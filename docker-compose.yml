@@ -13,9 +13,12 @@ services:
       - ./evaluation:/app/evaluation           # persist RAGAs scores
     environment:
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - QDRANT_URL=${QDRANT_URL:?Set QDRANT_URL to the Qdrant Cloud endpoint or local Qdrant service}
       - QDRANT_API_KEY=${QDRANT_API_KEY:-}
       - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-documents}
       - VECTOR_STORE=${VECTOR_STORE:-qdrant}
@@ -28,8 +31,10 @@ services:
     restart: unless-stopped
 
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.19.1
     container_name: rag-qdrant
+    profiles:
+      - local
     ports:
       - "6333:6333"
       - "6334:6334"

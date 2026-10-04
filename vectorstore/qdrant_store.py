@@ -13,14 +13,22 @@ from vectorstore.qdrant_client import QDRANT_COLLECTION_NAME, get_qdrant_client
 
 
 UPSERT_BATCH_SIZE = 64
+EXPECTED_VECTOR_SIZE = 1024
 
 
-def _collection_vector_size(collection_info: Any) -> Optional[int]:
-    """Return the size for a single unnamed vector collection, when available."""
+def _validate_collection(collection_info: Any, expected_vector_size: int) -> None:
     vectors = collection_info.config.params.vectors
     if isinstance(vectors, dict):
         raise ValueError("Qdrant collection uses named vectors; expected one unnamed vector.")
-    return vectors.size
+    if vectors.size != expected_vector_size:
+        raise ValueError(
+            f"Qdrant collection has vector size {vectors.size}; "
+            f"expected {expected_vector_size}."
+        )
+    if vectors.distance != models.Distance.COSINE:
+        raise ValueError(
+            f"Qdrant collection uses distance {vectors.distance}; expected COSINE."
+        )
 
 
 def ensure_collection(
@@ -40,12 +48,32 @@ def ensure_collection(
         )
         return
 
-    existing_size = _collection_vector_size(qdrant.get_collection(collection_name))
-    if existing_size != vector_size:
-        raise ValueError(
-            f"Qdrant collection {collection_name!r} has vector size {existing_size}; "
-            f"current embeddings have size {vector_size}."
-        )
+    _validate_collection(qdrant.get_collection(collection_name), vector_size)
+
+
+def check_qdrant_connection(
+    client: Optional[QdrantClient] = None,
+    collection_name: str = QDRANT_COLLECTION_NAME,
+    expected_vector_size: int = EXPECTED_VECTOR_SIZE,
+) -> Dict[str, Any]:
+    """Read-only connectivity, collection access, and vector configuration check."""
+    qdrant = client or get_qdrant_client()
+    try:
+        collection_info = qdrant.get_collection(collection_name)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Unable to access Qdrant collection {collection_name!r}; "
+            "check QDRANT_URL, QDRANT_API_KEY, and collection existence."
+        ) from exc
+
+    _validate_collection(collection_info, expected_vector_size)
+    return {
+        "status": "ok",
+        "collection_name": collection_name,
+        "vector_size": expected_vector_size,
+        "distance": "COSINE",
+        "points_count": collection_info.points_count,
+    }
 
 
 def _point_id(chunk: str, metadata: Dict[str, Any], position: int) -> str:

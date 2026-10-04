@@ -28,7 +28,6 @@ from typing import Any, Dict, List, Annotated, Literal, Optional, TypedDict
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-from langchain_ollama import ChatOllama
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
@@ -36,11 +35,11 @@ from loguru import logger
 
 load_dotenv()
 
+from app.llm_provider import create_chat_model, extract_text_content
 from vectorstore.store import hybrid_search
 
-# ── LLM (local Ollama — swap to any LangChain-compatible model) ───────────────
-LLM_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")   # change to mistral, qwen2.5, etc.
-llm = ChatOllama(model=LLM_MODEL, temperature=0.1)
+# All LangGraph LLM operations use the selected provider.
+llm = create_chat_model()
 
 # ── Web search fallback (free Tavily key at tavily.com) ──────────────────────
 web_search_tool = TavilySearchResults(
@@ -91,7 +90,7 @@ def route_query(state: AgentState) -> AgentState:
         f"Question: {query}\n\nReply with exactly one word: documents OR llm_only"
     )
     response = llm.invoke([HumanMessage(content=prompt)])
-    decision = response.content.strip().lower()
+    decision = extract_text_content(response.content).strip().lower()
     if "documents" not in decision:
         decision = "llm_only"
     logger.info(f"[route_query] decision='{decision}' for query='{query[:60]}'")
@@ -122,7 +121,7 @@ def grade_documents(state: AgentState) -> AgentState:
             "Is this chunk relevant to answering the question? Reply yes or no."
         )
         resp = llm.invoke([HumanMessage(content=prompt)])
-        if "yes" in resp.content.lower():
+        if "yes" in extract_text_content(resp.content).lower():
             relevant.append(chunk)
 
     logger.info(f"[grade_documents] {len(relevant)}/{len(context)} chunks relevant")
@@ -142,7 +141,7 @@ def rewrite_query(state: AgentState) -> AgentState:
         "Return only the rewritten question, nothing else."
     )
     response      = llm.invoke([HumanMessage(content=prompt)])
-    new_query     = str(response.content).strip()
+    new_query     = extract_text_content(response.content).strip()
     rewrite_count = int(state.get("rewrite_count") or 0) + 1  # type: ignore[union-attr]
     logger.info(f"[rewrite_query] attempt {rewrite_count}: '{new_query[:80]}'")
     return {**state, "query": new_query, "rewrite_count": rewrite_count}
@@ -201,7 +200,7 @@ def generate(state: AgentState) -> AgentState:
     response = llm.invoke([
         HumanMessage(content=f"[SYSTEM]\n{system}\n\n[USER]\n{user_prompt}")
     ])
-    answer = str(response.content)
+    answer = extract_text_content(response.content)
     logger.info(f"[generate] answer length={len(answer)} chars")
     return {
         **state,
