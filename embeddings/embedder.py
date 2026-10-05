@@ -9,7 +9,7 @@ Upgrade from all-MiniLM-L6-v2  →  BAAI/bge-m3
 
 from __future__ import annotations
 from functools import lru_cache
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 from sentence_transformers import CrossEncoder, SentenceTransformer
@@ -45,7 +45,12 @@ def embed_query(query: str) -> List[float]:
     return embed_texts([query])[0]
 
 
-def rerank(query: str, chunks: List[str], top_n: int = 5) -> List[str]:
+def rerank(
+    query: str,
+    chunks: List[str],
+    top_n: int = 5,
+    diagnostics: Optional[Dict[str, Any]] = None,
+) -> List[str]:
     """
     2-stage reranking:
     1. Retrieve top-k by vector similarity  (done in vectorstore layer)
@@ -56,6 +61,22 @@ def rerank(query: str, chunks: List[str], top_n: int = 5) -> List[str]:
     pairs    = [(query, chunk) for chunk in chunks]
     scores   = reranker.predict(pairs)
 
-    ranked = sorted(zip(scores, chunks), key=lambda x: x[0], reverse=True)
-    logger.debug(f"Reranker scores: {[round(s, 3) for s, _ in ranked[:top_n]]}")
-    return [chunk for _, chunk in ranked[:top_n]]
+    ranked = sorted(
+        enumerate(zip(scores, chunks)),
+        key=lambda item: item[1][0],
+        reverse=True,
+    )
+    if diagnostics is not None:
+        diagnostics["reranker_candidates"] = [
+            {
+                "candidate_index": candidate_index,
+                "reranker_rank": rank,
+                "reranker_score": float(score),
+                "selected": rank <= top_n,
+            }
+            for rank, (candidate_index, (score, _)) in enumerate(ranked, start=1)
+        ]
+    logger.debug(
+        f"Reranker scores: {[round(float(score), 3) for _, (score, _) in ranked[:top_n]]}"
+    )
+    return [chunk for _, (_, chunk) in ranked[:top_n]]

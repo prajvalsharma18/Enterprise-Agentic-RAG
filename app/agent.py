@@ -23,6 +23,7 @@ State machine
 """
 
 from __future__ import annotations
+import json
 import os
 from urllib.parse import urlsplit, urlunsplit
 from typing import Any, Dict, List, Annotated, Literal, Optional, TypedDict
@@ -37,7 +38,7 @@ from loguru import logger
 load_dotenv()
 
 from app.llm_provider import create_chat_model, extract_text_content
-from vectorstore.store import hybrid_search
+from vectorstore.store import hybrid_search, query_matches_indexed_corpus
 
 # All LangGraph LLM operations use the selected provider.
 llm = create_chat_model()
@@ -49,6 +50,7 @@ web_search_tool = TavilySearchResults(
 )
 
 MAX_REWRITES = 2   # prevent infinite loops
+MAX_HISTORY_MESSAGES = 6  # retain at most three recent user/assistant turns
 
 
 # ── Agent state ──────────────────────────────────────────────────────────────
@@ -69,6 +71,7 @@ class AgentState(_AgentStateRequired, total=False):
     diagnostics: Dict[str, Any]
     generation_evidence_source: str
     generation_context: List[str]
+    original_query: str
 
 
 # ── Node helpers ─────────────────────────────────────────────────────────────
@@ -80,6 +83,64 @@ def _last_human_query(state: AgentState) -> str:
     return state.get("query") or ""  # type: ignore[union-attr]
 
 
+def _contextualize_query(query: str, history: List[BaseMessage]) -> str:
+    """Resolve follow-up references using recent conversation, without treating it as evidence."""
+    recent = history[-MAX_HISTORY_MESSAGES:]
+    if not recent:
+        return query
+
+    history_text = "\n".join(
+        f"{'User' if isinstance(message, HumanMessage) else 'Assistant'}: "
+        f"{str(message.content)[:2000]}"
+        for message in recent
+        if isinstance(message, (HumanMessage, AIMessage))
+    )
+    if not history_text:
+        return query
+
+    prompt = (
+        "Determine whether the current question depends on the conversation to resolve "
+        "a reference, omitted subject, or follow-up. Conversation is for meaning only, "
+        "not factual evidence. If the question stands alone, set uses_context to false "
+        "and keep it unchanged. If it depends on prior context, rewrite it as a "
+        "standalone question while preserving the user's intent. Do not answer it. "
+        "Return only JSON with boolean uses_context and string query.\n\n"
+        f"Recent conversation:\n{history_text}\n\nCurrent question: {query}"
+    )
+    response = llm.invoke([HumanMessage(content=prompt)])
+    try:
+        result = json.loads(extract_text_content(response.content))
+    except (TypeError, ValueError):
+        return query
+    contextualized = result.get("query") if isinstance(result, dict) else None
+    if (
+        isinstance(result, dict)
+        and result.get("uses_context") is True
+        and isinstance(contextualized, str)
+        and contextualized.strip()
+    ):
+        return contextualized.strip()
+    return query
+
+
+def contextualize_query(state: AgentState) -> AgentState:
+    """Resolve conversational references before the existing routing/retrieval flow."""
+    messages = state.get("messages") or []
+    history = messages[:-1]
+    query = state.get("query") or _last_human_query(state)
+    contextualized = _contextualize_query(query, history)
+    if contextualized == query:
+        return state
+    diagnostics = dict(state.get("diagnostics") or {})
+    diagnostics["query_contextualized"] = True
+    return {
+        **state,
+        "query": contextualized,
+        "original_query": query,
+        "diagnostics": diagnostics,
+    }
+
+
 # ── Nodes ────────────────────────────────────────────────────────────────────
 
 def route_query(state: AgentState) -> AgentState:
@@ -87,7 +148,7 @@ def route_query(state: AgentState) -> AgentState:
     Ask LLM whether the question needs document retrieval.
     Returns updated state; routing decision is in 'query' metadata.
     """
-    query = _last_human_query(state)
+    query = state.get("query") or _last_human_query(state)
     prompt = (
         "You are a routing assistant for an application with a supplied document corpus. "
         "Choose 'documents' for specific factual, technical, or business questions that "
@@ -100,9 +161,17 @@ def route_query(state: AgentState) -> AgentState:
     decision = extract_text_content(response.content).strip().lower()
     if "documents" not in decision:
         decision = "llm_only"
+    corpus_match_override = False
+    if decision == "llm_only" and query_matches_indexed_corpus(query):
+        decision = "documents"
+        corpus_match_override = True
     logger.info(f"[route_query] decision='{decision}' for query='{query[:60]}'")
     diagnostics = dict(state.get("diagnostics") or {})
-    diagnostics.update({"initial_route": decision, "initial_query": query})
+    diagnostics.update({
+        "initial_route": decision,
+        "initial_query": query,
+        "corpus_match_override": corpus_match_override,
+    })
     diagnostics.setdefault("retrieval_attempts", [])
     diagnostics.setdefault("rewritten_queries", [])
     return {**state, "query": query, "_route": decision, "diagnostics": diagnostics}
@@ -118,7 +187,10 @@ def retrieve(state: AgentState) -> AgentState:
     attempts = list(diagnostics.get("retrieval_attempts", []))
     attempts.append({
         "query": query,
+        "dense_candidates": retrieval_diagnostics.get("dense_candidates", []),
+        "bm25_candidates": retrieval_diagnostics.get("bm25_candidates", []),
         "retrieval_candidates": retrieval_diagnostics.get("rrf_candidates", []),
+        "reranker_candidates": retrieval_diagnostics.get("reranker_candidates", []),
         "reranker_score_available": retrieval_diagnostics.get(
             "reranker_score_available", False
         ),
@@ -159,7 +231,12 @@ def grade_documents(state: AgentState) -> AgentState:
         prompt = (
             f"Question: {query}\n\n"
             f"Document chunk:\n{chunk['text']}\n\n"
-            "Is this chunk relevant to answering the question? Reply yes or no."
+            "Judge the information in the chunk, not just whether it discusses the same topic. "
+            "Reply yes if it directly answers any material part of the question or provides "
+            "a specific fact needed to answer it. For a multi-part question, partial evidence "
+            "for one requested part is relevant even if the chunk does not answer every part. "
+            "Reply no when the chunk is only topically related and provides no information "
+            "that helps answer the question. Reply with only yes or no."
         )
         resp = llm.invoke([HumanMessage(content=prompt)])
         accepted = "yes" in extract_text_content(resp.content).lower()
@@ -275,7 +352,7 @@ def generate(state: AgentState) -> AgentState:
     Final generation node — synthesises answer from context + conversation history.
     Adds citations (source + page) when using document context.
     """
-    query:       str                    = state["query"]
+    query:       str                    = state.get("original_query") or state["query"]
     history:     List[BaseMessage]     = state.get("messages") or []       # type: ignore[assignment]
 
     evidence_source, ctx_block, generation_context = _select_generation_evidence(state)
@@ -305,6 +382,9 @@ def generate(state: AgentState) -> AgentState:
         "You are a precise, helpful document assistant. "
         "Answer only from the provided context. "
         "If the context is insufficient, say so clearly. "
+        "Use conversation history only to resolve references and maintain continuity; "
+        "prior user or assistant claims are not verified evidence. For document- or "
+        "web-grounded answers, rely on the current provided context. "
         f"{source_note}"
     )
     user_prompt = (
@@ -354,13 +434,15 @@ def build_graph():
     g = StateGraph(AgentState)
 
     g.add_node("route_query",     route_query)
+    g.add_node("contextualize_query", contextualize_query)
     g.add_node("retrieve",        retrieve)
     g.add_node("grade_documents", grade_documents)
     g.add_node("rewrite_query",   rewrite_query)
     g.add_node("web_search",      web_search)
     g.add_node("generate",        generate)
 
-    g.set_entry_point("route_query")
+    g.set_entry_point("contextualize_query")
+    g.add_edge("contextualize_query", "route_query")
 
     g.add_conditional_edges("route_query",     route_after_routing,
                             {"retrieve": "retrieve", "generate": "generate"})
@@ -387,7 +469,7 @@ def ask(query: str, history: Optional[List[BaseMessage]] = None) -> Dict[str, An
     Main entry point. Call from FastAPI or Streamlit.
     Returns {"answer": str, "sources": list, "rewrite_count": int}
     """
-    messages = (history or []) + [HumanMessage(content=query)]
+    messages = (history or [])[-MAX_HISTORY_MESSAGES:] + [HumanMessage(content=query)]
     initial_state: AgentState = {
         "messages":      messages,
         "query":         query,

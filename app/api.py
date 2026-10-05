@@ -18,14 +18,16 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from langchain_core.messages import AIMessage, HumanMessage
 
 from app.agent import ask
+from app.runtime_info import public_runtime_info
 from ingestion.ingest import load_pdfs
 from vectorstore.store import build_index
 from vectorstore.qdrant_store import check_qdrant_connection
@@ -57,15 +59,27 @@ DATA_DIR.mkdir(exist_ok=True)
 
 # ── Pydantic schemas ─────────────────────────────────────────────────────────
 
+class ConversationMessage(BaseModel):
+    """Small, serializable browser-session turn accepted by /query."""
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=2000)
+
+
 class QueryRequest(BaseModel):
     question:   str
-    history:    Optional[List[dict]] = None   # [{"role": "user"|"assistant", "content": "..."}]
+    history:    Optional[List[ConversationMessage]] = None
 
 
 class SourceItem(BaseModel):
     text:   str
     source: str
     page:   int
+    chunk_id: Optional[int] = None
+    chunk_index: Optional[int] = None
+    rrf_rank: Optional[int] = None
+    rrf_score: Optional[float] = None
+    reranker_rank: Optional[int] = None
+    reranker_score: Optional[float] = None
 
 
 class QueryResponse(BaseModel):
@@ -74,6 +88,10 @@ class QueryResponse(BaseModel):
     rewrite_count: int
     used_web:      bool
     latency_ms:    int
+    route:         Optional[str] = None
+    evidence_source: Optional[str] = None
+    generation_context: List[str] = Field(default_factory=list)
+    diagnostics:   Dict[str, Any] = Field(default_factory=dict)
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -81,7 +99,11 @@ class QueryResponse(BaseModel):
 @app.get("/health")
 def health():
     """Liveness probe — required for Docker/cloud deploy."""
-    return {"status": "ok", "version": app.version}
+    return {
+        "status": "ok",
+        "version": app.version,
+        "configuration": public_runtime_info(),
+    }
 
 
 @app.get("/health/qdrant")
@@ -133,7 +155,12 @@ def query(req: QueryRequest):
     """
     t0 = time.time()
     try:
-        result = ask(req.question)
+        history = [
+            HumanMessage(content=message.content)
+            if message.role == "user" else AIMessage(content=message.content)
+            for message in (req.history or [])[-6:]
+        ]
+        result = ask(req.question, history=history) if history else ask(req.question)
     except FileNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -152,6 +179,10 @@ def query(req: QueryRequest):
         rewrite_count = result["rewrite_count"],
         used_web      = result["used_web"],
         latency_ms    = latency,
+        route         = result.get("route"),
+        evidence_source = result.get("evidence_source"),
+        generation_context = result.get("generation_context", []),
+        diagnostics   = result.get("diagnostics", {}),
     )
 
 

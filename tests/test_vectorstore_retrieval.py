@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from vectorstore import store
 from vectorstore.qdrant_store import search_chunks
+from embeddings.embedder import rerank
 
 
 class QdrantDenseSearchTests(unittest.TestCase):
@@ -49,6 +50,48 @@ class QdrantDenseSearchTests(unittest.TestCase):
             search_chunks([0.1], 5, client=client)
 
 
+class CrossEncoderDiagnosticTests(unittest.TestCase):
+    def test_reranker_diagnostics_capture_scores_and_selected_candidates(self):
+        model = Mock()
+        model.predict.return_value = np.array([0.2, 0.9, -0.1])
+        diagnostics = {}
+        with patch("embeddings.embedder.get_reranker", return_value=model):
+            results = rerank(
+                "question", ["lower", "best", "last"], top_n=2,
+                diagnostics=diagnostics,
+            )
+
+        self.assertEqual(results, ["best", "lower"])
+        model.predict.assert_called_once_with([
+            ("question", "lower"),
+            ("question", "best"),
+            ("question", "last"),
+        ])
+        self.assertEqual(
+            diagnostics["reranker_candidates"],
+            [
+                {
+                    "candidate_index": 1,
+                    "reranker_rank": 1,
+                    "reranker_score": 0.9,
+                    "selected": True,
+                },
+                {
+                    "candidate_index": 0,
+                    "reranker_rank": 2,
+                    "reranker_score": 0.2,
+                    "selected": True,
+                },
+                {
+                    "candidate_index": 2,
+                    "reranker_rank": 3,
+                    "reranker_score": -0.1,
+                    "selected": False,
+                },
+            ],
+        )
+
+
 class HybridBackendTests(unittest.TestCase):
     def setUp(self):
         self.chunks = ["alpha chunk", "beta chunk", "gamma chunk"]
@@ -64,8 +107,21 @@ class HybridBackendTests(unittest.TestCase):
             "vectorstore.store._load_index",
             return_value=(self.index, self.chunks, self.metadata, self.bm25),
         ).start()
+        def fake_rerank(query, chunks, top_n, diagnostics=None):
+            if diagnostics is not None:
+                diagnostics["reranker_candidates"] = [
+                    {
+                        "candidate_index": index,
+                        "reranker_rank": index + 1,
+                        "reranker_score": 1.0 - index,
+                        "selected": index < top_n,
+                    }
+                    for index in range(len(chunks))
+                ]
+            return chunks[:top_n]
+
         self.rerank = patch(
-            "vectorstore.store.rerank", side_effect=lambda query, chunks, top_n: chunks[:top_n]
+            "vectorstore.store.rerank", side_effect=fake_rerank
         ).start()
         self.addCleanup(patch.stopall)
 
@@ -74,7 +130,7 @@ class HybridBackendTests(unittest.TestCase):
         qdrant_search = patch(
             "vectorstore.store.qdrant_search_chunks",
             return_value=[
-                {"text": "gamma chunk", "source": "doc.pdf", "page": 1, "chunk_index": 2}
+                {"text": "gamma chunk", "source": "doc.pdf", "page": 1, "chunk_index": 2, "score": 0.91}
             ],
         ).start()
         self.addCleanup(patch.stopall)
@@ -93,8 +149,12 @@ class HybridBackendTests(unittest.TestCase):
         self.assertIn("alpha chunk", candidate_texts)
         self.load.assert_called_once_with(include_faiss=False)
         self.assertTrue(results)
+        self.assertEqual(diagnostics["dense_candidates"][0]["score"], 0.91)
+        self.assertTrue(diagnostics["bm25_candidates"])
         self.assertTrue(diagnostics["rrf_candidates"])
-        self.assertFalse(diagnostics["reranker_score_available"])
+        self.assertEqual(len(diagnostics["reranker_candidates"]), 3)
+        self.assertEqual(diagnostics["reranker_candidates"][0]["reranker_score"], 1.0)
+        self.assertTrue(diagnostics["reranker_score_available"])
         self.assertEqual(results[0]["reranker_rank"], 1)
 
     def test_explicit_faiss_backend_uses_faiss_dense_search(self):
@@ -132,6 +192,17 @@ class CorrectiveRetrievalTests(unittest.TestCase):
         metadatas = [{"source": "doc.pdf", "page": 1, "chunk_index": 0}]
         bm25 = Mock()
         bm25.get_scores.return_value = np.array([1.0])
+
+        def return_candidates(query, candidates, top_n, diagnostics=None):
+            if diagnostics is not None:
+                diagnostics["reranker_candidates"] = [{
+                    "candidate_index": 0,
+                    "reranker_rank": 1,
+                    "reranker_score": 0.5,
+                    "selected": True,
+                }]
+            return candidates
+
         with patch.dict(os.environ, {"VECTOR_STORE": "qdrant"}), patch(
             "vectorstore.store._load_index", return_value=(None, chunks, metadatas, bm25)
         ), patch("vectorstore.store.embed_query", return_value=[0.4, 0.5]), patch(
@@ -140,7 +211,7 @@ class CorrectiveRetrievalTests(unittest.TestCase):
                 "text": chunks[0], "source": "doc.pdf", "page": 1, "chunk_index": 0
             }],
         ) as qdrant_search, patch(
-            "vectorstore.store.rerank", side_effect=lambda query, candidates, top_n: candidates
+            "vectorstore.store.rerank", side_effect=return_candidates
         ):
             state = {"query": "rewritten query", "context": []}
             result = agent.retrieve(state)
