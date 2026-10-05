@@ -15,6 +15,12 @@ An end-to-end **Agentic RAG platform** for enterprise document Q&A using **BGE-M
 * Retrieval and agent execution tracing
 * 30-question RAGAS evaluation benchmark
 * Streamlit frontend + FastAPI backend
+  
+<img width="1825" height="802" alt="Screenshot 2026-10-05 194745" src="https://github.com/user-attachments/assets/44605f6b-1fea-418b-9adb-57150bf84453" />
+<img width="1785" height="847" alt="Screenshot 2026-10-05 194902" src="https://github.com/user-attachments/assets/b018d6bc-0d6e-4a61-8bfd-4f49a5e03377" />
+<img width="1763" height="766" alt="Screenshot 2026-10-05 195021" src="https://github.com/user-attachments/assets/d87a2b08-d535-4838-972e-665ceca53ee1" />
+<img width="1791" height="688" alt="Screenshot 2026-10-05 200455" src="https://github.com/user-attachments/assets/5d29698b-c50e-4a1a-a2fd-4d7f89baeb64" />
+<img width="1671" height="757" alt="Screenshot 2026-10-05 200509" src="https://github.com/user-attachments/assets/2b52665e-817c-4957-9f48-d30e59ea51da" />
 
 ---
 
