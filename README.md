@@ -501,30 +501,6 @@ Core development validation reached:
 44 tests passed
 ```
 
----
-
-# Engineering Contribution
-
-This project originated from an existing Agentic RAG implementation and was substantially **engineered, hardened, evaluated, and extended**.
-
-Major work includes:
-
-* migrating the primary vector layer toward **Qdrant**
-* replacing the application LLM integration with the **OpenAI Responses API**
-* hardening structured LLM response handling
-* improving corpus-aware routing
-* improving web evidence handling
-* refining relevance grading
-* building a **30-question evaluation benchmark**
-* stabilizing RAGAS evaluation
-* adding retrieval diagnostics
-* adding regression tests
-* implementing conversational RAG
-* building the Streamlit knowledge-base and observability interface
-
-The project is therefore intentionally described as an **extended and hardened Agentic RAG platform**, rather than an entirely from-scratch implementation.
-
----
 
 # Current Status
 
